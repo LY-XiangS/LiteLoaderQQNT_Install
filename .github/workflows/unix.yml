@@ -146,9 +146,11 @@ jobs:
     - name: Install Flatpak QQ
       run: |
         sudo flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
-        sudo flatpak install -y flathub com.qq.QQ -v 
+        sudo flatpak install -y flathub com.qq.QQ -v --ostree-verbose
         ls /var/tmp/ -lah
         ls ~/ -lah
+        tree /var/tmp
+        tree ~/
     - name: Save Cache (QQ)
       uses: actions/cache/save@v4
       with:
