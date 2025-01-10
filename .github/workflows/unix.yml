@@ -122,6 +122,8 @@ jobs:
   
   check_flatpak_qq:
     runs-on: ubuntu-latest  # 使用 Ubuntu 运行 Flatpak 版本测试
+    env:
+      FLATPAK_SYSTEM_CACHE_DIR: ~/flatpak-cache
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -134,11 +136,23 @@ jobs:
 
     - name: Install dependencies (apt)
       run: sudo apt-get install xvfb flatpak -y
-        
+      
+    - name: Restore Cache (QQ)
+      uses: actions/cache/restore@v4
+      with:
+        path: ${{ env.FLATPAK_SYSTEM_CACHE_DIR }}
+        key: QQ-flatpak
+     
     - name: Install Flatpak QQ
       run: |
         sudo flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
         sudo flatpak install -y flathub com.qq.QQ
+
+    - name: Save Cache (QQ)
+      uses: actions/cache/save@v4
+      with:
+        path: ${{ env.FLATPAK_SYSTEM_CACHE_DIR }}
+        key: QQ-flatpak
 
     - name: Run install.sh
       run: |
