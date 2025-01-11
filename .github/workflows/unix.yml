@@ -143,8 +143,7 @@ jobs:
       with:
         path: ${{ env.FLATPAK_SYSTEM_DIR }}/app
         key: QQ-flatpak
-        restore-keys: [QQ-flatpak]
-       
+        restore-keys: QQ-flatpak
      
     - name: Install Flatpak QQ
       run: |
