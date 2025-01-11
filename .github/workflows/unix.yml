@@ -157,7 +157,7 @@ jobs:
       with:
         path: |
           ${{ env.FLATPAK_SYSTEM_CACHE_DIR }}
-          ${{ env.FLATPAK_SYSTEM_DIR }}
+          ${{ env.FLATPAK_SYSTEM_DIR }}/app
         key: QQ-flatpak
 
     - name: Run install.sh
