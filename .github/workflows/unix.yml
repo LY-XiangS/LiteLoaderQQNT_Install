@@ -141,9 +141,7 @@ jobs:
     - name: Restore Cache (QQ)
       uses: actions/cache/restore@v4
       with:
-        path: |
-          ${{ env.FLATPAK_SYSTEM_CACHE_DIR }}
-          ${{ env.FLATPAK_SYSTEM_DIR }}
+        path: ${{ env.FLATPAK_SYSTEM_DIR }}/app
         key: QQ-flatpak
      
     - name: Install Flatpak QQ
@@ -154,9 +152,7 @@ jobs:
     - name: Save Cache (QQ)
       uses: actions/cache/save@v4
       with:
-        path: |
-          ${{ env.FLATPAK_SYSTEM_CACHE_DIR }}
-          ${{ env.FLATPAK_SYSTEM_DIR }}/app
+        path: ${{ env.FLATPAK_SYSTEM_DIR }}/app
         key: QQ-flatpak
 
     - name: Run install.sh
