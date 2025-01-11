@@ -156,7 +156,6 @@ jobs:
       with:
         path: |
           ${{ env.FLATPAK_SYSTEM_CACHE_DIR }}
-          /var/lib/flatpak
           ${{ env.FLATPAK_SYSTEM_DIR }}
         key: QQ-flatpak
 
