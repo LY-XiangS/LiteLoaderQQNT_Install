@@ -104,40 +104,20 @@ function check_url_connectivity() {
 
 # 定义代理 URL 列表
 github_download_proxies=(
-    "${PROXY_URL:=https://mirror.ghproxy.com}"
-    "https://gh.h233.eu.org"
+    "${PROXY_URL:=https://ghfast.top}"
     "https://gh.ddlc.top"
     "https://slink.ltd"
     "https://cors.isteed.cc"
     "https://hub.gitmirror.com"
     "https://sciproxy.com"
-    "https://ghproxy.cc"
-    "https://cf.ghproxy.cc"
-    "https://www.ghproxy.cc"
-    "https://ghproxy.cn"
-    "https://www.ghproxy.cn"
-    "https://gh.jiasu.in"
-    "https://dgithub.xyz"
-    "https://download.ixnic.net"
-    "https://download.nuaa.cf"
-    "https://download.scholar.rr.nu"
-    "https://download.yzuu.cf"
     "https://ghproxy.net"
-    "https://kkgithub.com"
     "https://gitclone.com"
     "https://hub.incept.pw"
     "https://github.moeyy.xyz"
-    "https://gh.xiu2.us.kg"
     "https://dl.ghpig.top"
     "https://gh-proxy.com"
-    "https://github.site"
-    "https://github.store"
-    "https://github.tmby.shop"
     "https://hub.whtrys.space"
     "https://gh-proxy.ygxz.in"
-    "https://gitdl.cn"
-    "https://ghp.ci"
-    "https://githubfast.com"
     "https://ghproxy.net"
 )
 
@@ -414,7 +394,12 @@ function get_liteloaderqqnt_profile_from_shell_rc() {
     _tmp=$(sed -n "s/^$ll_profile_line_perfix//gp" "$shell_rc_file" | awk 'END { print }')
     if [ -n "$_tmp" ]; then
         _tmp=$(echo "${_tmp}" | sed 's/^\"//;s/\"$//;s/^'\''//;s/'\''$//')
-        existing_ll_profile_value=$(echo "$_tmp"| sed "s#$HOME/#\${HOME}/#;s#^\$HOME/#\${HOME}/#")
+        # For fish shell, don't use ${HOME}
+        if [ "${SHELL##*/}" = "fish" ]; then
+            existing_ll_profile_value=$(echo "$_tmp"| sed "s#$HOME/#\$HOME/#")
+        else
+            existing_ll_profile_value=$(echo "$_tmp"| sed "s#HOME/#\${HOME}/#;s#^\$HOME/#\${HOME}/#")
+        fi
         log_info "获取 ${SHELL##*/} 配置中变量 $var_name 成功：\"$existing_ll_profile_value\""
     fi
 }
@@ -422,7 +407,11 @@ function get_liteloaderqqnt_profile_from_shell_rc() {
 function set_liteloaderqqnt_profile_to_shell_rc() {
     get_liteloaderqqnt_profile_from_shell_rc
     local var_value
-    var_value=$(echo "$liteloaderqqnt_config"| sed "s#$HOME/#\${HOME}/#;s#^\$HOME/#\${HOME}/#")
+    if [ "${SHELL##*/}" = "fish" ]; then
+        var_value=$(echo "$liteloaderqqnt_config"| sed "s#$HOME/#\$HOME/#")
+    else
+        var_value=$(echo "$liteloaderqqnt_config"| sed "s#$HOME/#\${HOME}/#;s#^\$HOME/#\${HOME}/#")
+    fi
     local var_name="LITELOADERQQNT_PROFILE"
     local MARKER_START="# BEGIN LITELOADERQQNT"
     local MARKER_END="# END LITELOADERQQNT"
@@ -596,11 +585,11 @@ function install_for_flatpak_qq() {
 
             # 授予 Flatpak 访问 LiteLoaderQQNT 数据目录的权限
             log_info "授予 Flatpak 版 QQ 对数据目录 $liteloaderqqnt_config 和本体目录 $liteloaderqqnt_path 的访问权限"
-            $sudo_cmd flatpak override --user com.qq.QQ --filesystem="$liteloaderqqnt_config"
-            $sudo_cmd flatpak override --user com.qq.QQ --filesystem="$liteloaderqqnt_path"
+            $sudo_cmd flatpak override com.qq.QQ --filesystem="$liteloaderqqnt_config"
+            $sudo_cmd flatpak override com.qq.QQ --filesystem="$liteloaderqqnt_path"
 
             # 将 LITELOADERQQNT_PROFILE 作为环境变量传递给 Flatpak 版 QQ
-            $sudo_cmd flatpak override --user com.qq.QQ --env=LITELOADERQQNT_PROFILE="$liteloaderqqnt_config"
+            $sudo_cmd flatpak override com.qq.QQ --env=LITELOADERQQNT_PROFILE="$liteloaderqqnt_config"
 
             log_info "设置完成！LiteLoaderQQNT 数据目录：$liteloaderqqnt_config"
 
