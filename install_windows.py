@@ -52,69 +52,6 @@ def get_github_proxy_urls():
 sys.stdout.reconfigure(encoding="utf-8")
 subprocess.run("chcp 65001", shell=True)
 
-# x64 or x86 signatures and replacements
-SIG_ARM64 = bytes([0x98, 0x01, 0x00, 0x35, 0xB2, 0xED, 0xFF, 0x97])
-FIX_ARM64 = bytes([0x98, 0x01, 0x00, 0x35, 0x20, 0x00, 0x80, 0xD2])
-SIG_X64 = bytes([0x48, 0x89, 0xCE, 0x48, 0x8B, 0x11, 0x4C, 0x8B, 0x41, 0x08, 0x49, 0x29, 0xD0, 0x48, 0x8B, 0x49, 0x18, 0xE8])
-FIX_X64 = bytes([0x48, 0x89, 0xCE, 0x48, 0x8B, 0x11, 0x4C, 0x8B, 0x41, 0x08, 0x49, 0x29, 0xD0, 0x48, 0x8B, 0x49, 0x18, 0xB8, 0x01, 0x00, 0x00, 0x00])
-SIG_X86 = bytes([0x89, 0xCE, 0x8B, 0x01, 0x8B, 0x49, 0x04, 0x29, 0xC1, 0x51, 0x50, 0xFF, 0x76, 0x0C, 0xE8])
-FIX_X86 = bytes([0x89, 0xCE, 0x8B, 0x01, 0x8B, 0x49, 0x04, 0x29, 0xC1, 0x51, 0x50, 0xFF, 0x76, 0x0C, 0xB8, 0x01, 0x00, 0x00, 0x00])
-
-
-def scan_and_replace(buffer, pattern, replacement):
-    index = 0
-    while index < len(buffer):
-        index = buffer.find(pattern, index)
-        if index == -1:
-            break
-        buffer[index: index + len(replacement)] = replacement
-        print(f"Found at 0x{index:08X}")
-        index += len(replacement)
-
-
-def get_pe_arch(pe_file):
-    e_lfanew_offset = 0x3C
-    pe_header_offset = struct.unpack("<I", pe_file[e_lfanew_offset:e_lfanew_offset + 4])[0]
-    machine_offset = pe_header_offset + 4
-    machine = struct.unpack("<H", pe_file[machine_offset:machine_offset + 2])[0]
-    return machine
-
-
-def patch_pe_file(file_path):
-    # 存在 64 位系统安装 32 位 QQ 的可能，需考虑
-    try:
-        # 创建备份文件的路径
-        backup_path = file_path + ".bak"
-        
-        # 如果备份文件已存在，覆盖它
-        if os.path.exists(backup_path):
-            os.remove(backup_path)
-#           print(f"已删除旧的备份文件: {backup_path}")
-            
-        # 创建新的备份
-        os.rename(file_path, backup_path)
-        print(f"已将原版备份在: {backup_path}")
-        
-        with open(backup_path, "rb") as file:
-            pe_file = bytearray(file.read())
-
-        machine = get_pe_arch(pe_file)
-        if machine == 0x8664:  # x64
-            scan_and_replace(pe_file, SIG_X64, FIX_X64)
-        elif machine == 0x014C:  # x86
-            scan_and_replace(pe_file, SIG_X86, FIX_X86)
-        elif machine == 0xAA64:  # ARM64
-            scan_and_replace(pe_file, SIG_ARM64, FIX_ARM64)
-
-        with open(file_path, "wb") as output_file:
-            output_file.write(pe_file)
-
-        print("修补成功!")
-    except Exception as e:
-        print(f"发生错误: {e}")
-        input("按 回车键 退出。")
-
-
 def get_qq_exe_path():
     root = tk.Tk()
     root.withdraw()
@@ -136,50 +73,6 @@ def read_registry_key(hive, subkey, value_name):
     except Exception as e:
         print(f"注册表读取失败: {e}")
         return None
-
-
-def compare_versions(version1, version2):
-    v1_parts = [int(part) for part in version1.split(".")]
-    v2_parts = [int(part) for part in version2.split(".")]
-
-    # 对比版本号的每个部分
-    for i in range(max(len(v1_parts), len(v2_parts))):
-        v1_part = v1_parts[i] if i < len(v1_parts) else 0
-        v2_part = v2_parts[i] if i < len(v2_parts) else 0
-
-        if v1_part < v2_part:
-            return False
-        elif v1_part > v2_part:
-            return True
-
-    return False  # 两个版本号相等
-
-
-def check_for_updates():
-    try:
-        # 获取最新版本号
-        latest_url = "https://github.com/Mzdyl/LiteLoaderQQNT_Install/releases/latest"
-        response = requests.get(latest_url, timeout=2)
-        latest_release = response.url.split('/')[-1]  # 获取重定向后的 URL 中的版本号
-
-        if compare_versions(latest_release, current_version):
-            print(f"发现新版本 {latest_release}！")
-            # 提示用户是否下载更新
-            user_input = countdown_input("是否要下载更新？输入 'y' 确认，5 秒内未输入则跳过更新。","n")
-
-            if user_input == 'y':
-                download_url = f"https://github.com/Mzdyl/LiteLoaderQQNT_Install/releases/download/{latest_release}/install_windows.exe"
-                download_file(download_url, f"install_windows-{latest_release}.exe")
-                print("版本已更新，请重新运行最新脚本。")
-                input("按 回车键 退出")
-                sys.exit(0)
-            else:
-                print("跳过更新，继续安装。")
-        else:
-            print("当前已是最新版本，开始安装。")
-    except Exception as e:
-        print(f"检查更新阶段发生错误: {e}")
-        print("将跳过检查更新，继续安装")
 
 
 def get_qq_path():
@@ -360,23 +253,6 @@ def cleanup_old_bak(qq_exe_path):
 
     except Exception as e:
         print(f"移除旧版备份时发生错误: {e}")
-
-
-def patch_index_js(file_path):
-    try:
-        app_launcher_path = os.path.join(file_path, "resources", "app", "app_launcher")
-        os.chdir(app_launcher_path)
-        print("开始修补 index.js…")
-        index_path = os.path.join(app_launcher_path, "index.js")
-        # 备份原文件
-        print("已将旧版文件备份为 index.js.bak ")
-        bak_index_path = index_path + ".bak"
-        shutil.copyfile(index_path, bak_index_path)
-        with open(index_path, "w", encoding="utf-8") as f:
-            f.write(f"require('{os.path.join(file_path, 'resources', 'app', 'LiteLoaderQQNT').replace(os.sep, '/')}');\n")
-            f.write("require('./launcher.node').load('external_index', module);")
-    except Exception as e:
-        print(f"修补 index.js 时发生错误: {e}")
 
         
 def create_launcher_js(file_path, version_path, launcher_name="ml_install.js"):
@@ -771,12 +647,6 @@ def main():
         qq_exe_path = get_qq_path()
         file_path = os.path.dirname(qq_exe_path)
 
-        skip_update_file = os.path.join(file_path, "SKIP_UPDATE")
-        if os.path.exists(skip_update_file):
-            print("检测到 SKIP_UPDATE 文件，跳过更新")
-        else:
-            check_for_updates()
-
         check_and_kill_qq("QQ.exe")
         if not github_actions:
             cleanup_old_bak(qq_exe_path)
@@ -784,27 +654,22 @@ def main():
         else:
             cleanup_old_bak(qq_exe_path)
 
-        qq_file_size_bytes = os.path.getsize(qq_exe_path)
-        qq_file_size_mb = qq_file_size_bytes / (1024 * 1024)
-        if qq_file_size_mb < 10:
-            print("QQ大小小于 10MB，判断为新版")
-            latest_version = get_latest_version(file_path)
-            version_path = os.path.join(file_path, "versions", latest_version)
-            qq_dll_path = os.path.join(version_path, 'QQNT.dll') 
-            create_launcher_js(file_path, version_path)
-            patch_package_json(version_path)
-        else:
-            print("QQ大小大于 10MB，判断为旧版")
-            patch_index_js(file_path)
+    
+        latest_version = get_latest_version(file_path)
+        version_path = os.path.join(file_path, "versions", latest_version)
+        create_launcher_js(file_path, version_path)
+        patch_package_json(version_path)
+    
             
         if os.path.exists(os.path.join(file_path, "dbghelp.dll")):
             print("检测到dbghelp.dll，推测你已修补QQ，跳过修补")
         else:
-            if qq_file_size_mb < 10:
-                patch_pe_file(qq_dll_path) 
-            else:
-                patch_pe_file(qq_exe_path)
-        
+            print("请进频道内下载 dbghelp.dll 并放到")
+            print("f{qq_exe_path}\n 内后再再次运行本程序")
+            print("频道 http://t.me/LiteLoaderQQNT_Channel ")
+            input("按 回车键 退出。")
+            exit()
+            
         install_liteloader(file_path)
         patch(file_path)
 
