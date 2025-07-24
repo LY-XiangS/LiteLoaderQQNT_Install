@@ -2,7 +2,6 @@ name: Windows
 
 on:
   push:
-    if: contains(github.event.head_commit.message, 'pre-release')    
     paths:
       - "install_windows.py"
       - ".github/workflows/windows.yml"
@@ -43,11 +42,11 @@ jobs:
           # 获取 LiteLoaderQQNT 的最新版本
           $LLtag = (Invoke-RestMethod -Uri "https://api.github.com/repos/LiteLoaderQQNT/LiteLoaderQQNT/releases/latest").tag_name
           echo "LLtag=$LLtag" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-  
+
           # 获取 LL-plugin-list-viewer 的最新版本
           $LVtag = (Invoke-RestMethod -Uri "https://api.github.com/repos/ltxhhz/LL-plugin-list-viewer/releases/latest").tag_name
           echo "LVtag=$LVtag" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-  
+
           curl -L -o "LiteLoaderQQNT-${LLtag}.zip" "https://github.com/LiteLoaderQQNT/LiteLoaderQQNT/releases/download/${LLtag}/LiteLoaderQQNT.zip"
           curl -L -o "list-viewer-${LVtag}.zip" "https://github.com/ltxhhz/LL-plugin-list-viewer/releases/download/${LVtag}/list-viewer.zip"
 
@@ -91,8 +90,8 @@ jobs:
       - name: Download and Install QQ Software
         run: |
           # Download QQ software
-          python -m pip install requests
-          python get_qqnt.py Windowsx64
+          python3 -m pip install requests
+          python3 get_qqnt.py QQInstaller.exe windows ntDownloadX64Url
           # Install QQ silently
           Start-Process -FilePath QQInstaller.exe -ArgumentList '/S' -Wait
 

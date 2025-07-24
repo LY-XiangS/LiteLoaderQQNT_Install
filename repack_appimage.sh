@@ -29,12 +29,12 @@ function patch_resources() {
     local app_path=$1
     local jsfile_name="ml_install.js"  # 这里的文件名可以随意设置
     local jsfile_path="$app_path/app_launcher/$jsfile_name"
-    
+
     # 写入 require(String.raw`*`) 到 *.js 文件
     echo "正在将 'require(\"./LiteLoader\");' 写入 $jsfile_path"
     echo 'require("./LiteLoader");' > "$jsfile_path"
     echo "写入成功"
-    
+
     # 检查 package.json 文件是否存在
     local package_json="$app_path/package.json"
     if [ -f "$package_json" ]; then
@@ -50,8 +50,7 @@ function patch_resources() {
 # 获取qq appimage 最新链接
 function get_qqnt_appimage_url() {
     [ "$os_arch" != "x86_64" ] && os_arch="arm64"
-    check_url="$(wget -t3 -T3 -q -O- https://im.qq.com/linuxqq/index.shtml| grep -o 'https://.*linuxQQDownload.js?[^"]*')"
-    appimage_url=$(wget -t3 -T3 -q -O- "$check_url" | grep -o 'https://[^,]*AppImage' | grep "$os_arch")
+    appimage_url=$(wget -t3 -T3 -q -O- "https://cdn-go.cn/qq-web/im.qq.com_new/latest/rainbow/linuxConfig.js" | grep -o 'https://[^,]*AppImage' | grep "$os_arch")
 
     [ -z "$appimage_url" ] && { echo "获取qq下载链接失败"; exit 1; }
     echo "$appimage_url"
