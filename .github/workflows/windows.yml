@@ -96,7 +96,7 @@ jobs:
       - name: Download and Install QQ Software
         run: |
           # Download QQ software
-          pythonget_qqnt.py QQInstaller.exe windows ntDownloadX64Url
+          python get_qqnt.py QQInstaller.exe windows ntDownloadX64Url
           # Install QQ silently
           Start-Process -FilePath QQInstaller.exe -ArgumentList '/S' -Wait
 
